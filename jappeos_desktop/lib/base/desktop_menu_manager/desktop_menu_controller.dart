@@ -17,7 +17,7 @@
 part of jappeos_desktop.base;
 
 class DesktopMenuController {
-  static const menuAnimationDuration = Duration(milliseconds: 100);
+  static const kMenuAnimationDuration = Duration(milliseconds: 100);
 
   DesktopMenuController(this.rebuildCallback);
 
@@ -36,7 +36,7 @@ class DesktopMenuController {
     menu.onOpen.broadcast();
 
     if (closeCallback != null) {
-      menu.onClose + (_) => closeCallback();
+      menu.onClose.subscribe((_) => closeCallback());
     }
   }
 
@@ -100,21 +100,19 @@ class DesktopMenuController {
             onTapOutside: (_) => closeMenu(),
             child: AnimatedOpacity(
               opacity: wasInitialBuild ? 0.3 : 1,
-              duration: menuAnimationDuration,
+              duration: kMenuAnimationDuration,
               child: RepaintBoundary(
                 child: AnimatedScale(
                   curve: Curves.easeIn,
-                  duration: menuAnimationDuration,
+                  duration: kMenuAnimationDuration,
                   scale: wasInitialBuild ? 0 : 1,
                   alignment: Alignment.topLeft,
                   child: () {
                     if (_currentMenu is FullscreenDesktopMenu) {
-                      return AdvancedContainer(
+                      return ShadeContainer.transparent(
                         width: _currentStackWSize.width,
                         height: (_currentStackWSize.height - DSKTP_UI_LAYER_TOPBAR_HEIGHT).clamp(0, double.infinity),
-                        background: AdvancedContainerBackground.transparentBackground,
-                        blur: true,
-                        borderRadius: 0,
+                        backgroundBlur: true,
                         padding: const EdgeInsets.all(BPPresets.small),
                         child: _currentMenu as Widget,
                       );
@@ -135,7 +133,7 @@ class DesktopMenuController {
             left: _currentMenuPosition!.dx,
             top: _currentMenuPosition!.dy,
             curve: Curves.easeIn,
-            duration: _currentMenuIsInitialBuild ? Duration.zero : menuAnimationDuration,
+            duration: _currentMenuIsInitialBuild ? Duration.zero : kMenuAnimationDuration,
             child: base(),
           )
         : null;

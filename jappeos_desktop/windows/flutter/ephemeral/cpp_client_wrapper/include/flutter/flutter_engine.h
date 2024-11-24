@@ -9,6 +9,7 @@
 
 #include <chrono>
 #include <memory>
+#include <optional>
 #include <string>
 
 #include "binary_messenger.h"
@@ -84,8 +85,17 @@ class FlutterEngine : public PluginRegistry {
   // once on the platform thread.
   void SetNextFrameCallback(std::function<void()> callback);
 
+  // Called to pass an external window message to the engine for lifecycle
+  // state updates. Non-Flutter windows must call this method in their WndProc
+  // in order to be included in the logic for application lifecycle state
+  // updates. Returns a result if the message should be consumed.
+  std::optional<LRESULT> ProcessExternalWindowMessage(HWND hwnd,
+                                                      UINT message,
+                                                      WPARAM wparam,
+                                                      LPARAM lparam);
+
  private:
-  // For access to RelinquishEngine.
+  // For access to the engine handle.
   friend class FlutterViewController;
 
   // Gives up ownership of |engine_|, but keeps a weak reference to it.
@@ -103,10 +113,11 @@ class FlutterEngine : public PluginRegistry {
   // Whether or not this wrapper owns |engine_|.
   bool owns_engine_ = true;
 
-  // Whether the engine has been run. This will be true if Run has been called,
-  // or if RelinquishEngine has been called (since the view controller will
-  // run the engine if it hasn't already been run).
-  bool has_been_run_ = false;
+  // Whether |Run| has been called successfully.
+  //
+  // This is used to improve error messages. This can be false while the engine
+  // is running if the engine was started by creating a view.
+  bool run_succeeded_ = false;
 
   // The callback to execute once the next frame is drawn.
   std::function<void()> next_frame_callback_ = nullptr;

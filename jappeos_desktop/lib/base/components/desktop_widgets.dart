@@ -137,6 +137,7 @@ class _DApplicationItemState extends State<DApplicationItem> {
         onEnter: (p0) => setState(() => isHovered = true),
         onExit: (p0) => setState(() => isHovered = false),
         child: GestureDetector(
+          onTap: widget.onPress,
           onTapDown: (p0) => setState(() => isPressed = true),
           onTapUp: (p0) => setState(() => isPressed = false),
           onTapCancel: () => setState(() => isPressed = false),
@@ -325,10 +326,10 @@ class _DTopbarButtonState extends State<DTopbarButton> {
               borderRadius: borderRad,
               child: InkWell(
                 mouseCursor: SystemMouseCursors.alias,
-                hoverColor: Theme.of(context).colorScheme.background.withOpacity(0.1),
+                hoverColor: Theme.of(context).colorScheme.surface.withOpacity(0.1),
                 splashColor: splashColor,
                 highlightColor: accentColor.withOpacity(0.1),
-                overlayColor: MaterialStatePropertyAll(splashColor.withOpacity(0.175)),
+                overlayColor: WidgetStatePropertyAll(splashColor.withOpacity(0.175)),
                 borderRadius: borderRad,
                 onTap: () {
                   setState(() => isMenuOpen = true);
@@ -448,7 +449,7 @@ class _DWindowViewState extends State<DWindowView> {
             constraints: BoxConstraints(
               maxWidth: width,
             ),
-            child: IntrinsicWidth(child: ShadeEditableTextWidget(initialText: widget.title, onEditingComplete: widget.onTitleEdited)),
+            child: IntrinsicWidth(child: ShadeEditableTextWidget(initialText: widget.title, onEditingComplete: widget.onTitleEdited, hintText: "Type Something...")),
           )
         else ...[
           const SizedBox(height: 11 / 2),

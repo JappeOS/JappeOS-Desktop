@@ -34,16 +34,18 @@ class DesktopState extends State<Desktop> {
   static WindowStackController? _wmController;
   static WindowStackController? getWmController() => _wmController;
 
-  /// The [BuildContext] for the desktop UI, the use of
-  /// this field is meant ONLY for the desktop menu system.
-  static BuildContext? publicContext;
-
   /// Whether to render GUI on the desktop or not, if false, only the WM windows will be rendered.
   static bool renderGUI = true;
 
   late final DesktopMenuController _menuController;
 
   bool dockIsShown = true;
+
+  final shortcuts = <LogicalKeySet, Intent>{
+    LogicalKeySet(LogicalKeyboardKey.alt, LogicalKeyboardKey.tab): const SwitchWindowIntent(),
+  };
+
+  final actions = const <Type, Action<Intent>>{};
 
   @override
   void initState() {
@@ -57,27 +59,20 @@ class DesktopState extends State<Desktop> {
   Widget build(BuildContext context) {
     /*TODO: Remove*/ print("DESKTOP REBUILD");
 
-    publicContext = context;
-
     // The window layer of the desktop UI.
-    final Widget windowLayer = Positioned(
+    Widget buildWindowLayer() => Positioned(
       left: 0,
       right: 0,
       top: 0,
       bottom: 0,
-      child: Stack(
-        // <-- TODO: Remove extra stack
-        children: [
-          WindowStack(
-            wmController: _wmController,
-            insets: const EdgeInsets.only(top: DSKTP_UI_LAYER_TOPBAR_HEIGHT),
-          ),
-        ],
+      child: WindowStack(
+        wmController: _wmController,
+        insets: const EdgeInsets.only(top: DSKTP_UI_LAYER_TOPBAR_HEIGHT),
       ),
     );
 
     // This is the dock, it is shown in the bottom of the screen.
-    Widget dock() {
+    Widget buildDock() {
       Widget base(List<Widget> children) {
         return Align(
           alignment: Alignment.bottomCenter,
@@ -92,7 +87,7 @@ class DesktopState extends State<Desktop> {
           Positioned(
             child: MouseRegion(
               onExit: (event) => setState(() {
-                if (!MOBILE_MODE) dockIsShown = false;
+                dockIsShown = false;
               }),
               child: Container(
                 height: DSKTP_UI_LAYER_DOCK_HEIGHT,
@@ -128,17 +123,15 @@ class DesktopState extends State<Desktop> {
       }
     }
 
-    // This is the topBar, it is shown in the top of the screen. It can be used to launch apps, or using the quickSettings menu.
-    final Widget topBar = Positioned(
+    // The topBar is shown in the top of the screen. It can be used to launch apps, or using the quickSettings menu.
+    Widget buildTopBar() => Positioned(
       top: 0,
       left: 0,
       right: 0,
       height: DSKTP_UI_LAYER_TOPBAR_HEIGHT,
-      child: AdvancedContainer(
-        background: AdvancedContainerBackground.transparentBackground,
-        borderStyle: AdvancedContainerBorder.none,
-        borderRadius: 0,
-        blur: true,
+      child: ShadeContainer.transparent(
+        border: ShadeContainerBorder.none,
+        backgroundBlur: true,
         child: Stack(
           children: [
             Align(
@@ -169,39 +162,15 @@ class DesktopState extends State<Desktop> {
             ),
           ],
         ),
-      ).copyWith(),
+      ),
     );
 
-    List<Widget> getDesktopLayersUI() {
+    List<Widget> buildDesktopLayersUI() {
       List<Widget> widgets = [
-        // The layer for the desktop windows. Desktop mode only.
-        if (!MOBILE_MODE) windowLayer,
-
-        // The dock shown in the bottom of the desktop UI.
-        dock(),
-
-        // The layer for the desktop windows. Mobile mode only.
-        if (MOBILE_MODE) windowLayer,
-
-        // This is the TopBar, it's shown on the top of the desktop UI.
-        topBar,
+        buildWindowLayer(),
+        buildDock(),
+        buildTopBar(),
       ];
-
-      // The desktop-menu clicking area to close an active menu.
-      //if (_dm != null) {
-      //  _dm?.setStateF = (p0) => setState(p0);
-      //  widgets.add(
-      //    Positioned(
-      //      top: 0,
-      //      left: 0,
-      //      bottom: 0,
-      //      right: 0,
-      //      child: GestureDetector(
-      //        onTap: () => setState(() => _dm = null),
-      //      ),
-      //    ),
-      //  );
-      //}
 
       // The desktop-menu layer of the desktop.
       if (_menuController.getWidget() != null) {
@@ -211,34 +180,42 @@ class DesktopState extends State<Desktop> {
       return widgets;
     }
 
-    // Desktop UI.
-    return !renderGUI
-        ? windowLayer
-        : Scaffold(
-            body: Container(
-              width: MediaQuery.of(context).size.width,
-              height: MediaQuery.of(context).size.height,
-              decoration: const BoxDecoration(
-                image: DecorationImage(
-                  // The desktop background image.
-                  image: AssetImage(DSKTP_UI_LAYER_BACKGROUND_WALLPAPER_DIR),
-                  fit: BoxFit.cover,
-                ),
-              ),
-              child: Shortcuts(
-                shortcuts: <LogicalKeySet, Intent>{
-                  LogicalKeySet(LogicalKeyboardKey.alt, LogicalKeyboardKey.tab): const SwitchWindowIntent(),
-                },
-                child: Actions(
-                  actions: <Type, Action<Intent>>{},
-                  child: Builder(
-                    builder: (context) => Stack(
-                      children: getDesktopLayersUI(),
-                    ),
-                  ),
+    Widget buildBase() {
+      // ignore: curly_braces_in_flow_control_structures
+      if (!renderGUI) return buildWindowLayer();
+      // ignore: curly_braces_in_flow_control_structures
+      else return Scaffold(
+        body: Container(
+          width: MediaQuery.of(context).size.width,
+          height: MediaQuery.of(context).size.height,
+          decoration: const BoxDecoration(
+            image: DecorationImage(
+              // The desktop background image.
+              image: AssetImage(DSKTP_UI_LAYER_BACKGROUND_WALLPAPER_DIR),
+              fit: BoxFit.cover,
+            ),
+          ),
+          child: Shortcuts(
+            shortcuts: shortcuts,
+            child: Actions(
+              actions: actions,
+              child: Builder(
+                builder: (context) => Stack(
+                  children: buildDesktopLayersUI(),
                 ),
               ),
             ),
-          );
+          ),
+        ),
+      );
+    }
+
+    // Desktop UI.
+    return ShadeApp(
+      title: 'jappeos_desktop',
+      debugShowCheckedModeBanner: false,
+      customThemeProperties: ShadeCustomThemeProperties(ThemeMode.dark, Color.fromARGB(255, 146, 20, 196), true),
+      home: buildBase(),
+    );
   }
 }

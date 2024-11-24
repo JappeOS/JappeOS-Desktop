@@ -102,7 +102,9 @@ class _LauncherMenuState extends State<LauncherMenu> {
                                     onPress: () {
                                       DesktopState.getWmController()!.createWindow()
                                         ..setResizable(true)
+                                        ..setMinSize(Vector2(300, 300))
                                         ..setSize(Vector2(300, 300))
+                                        ..setTitle("Window Title")
                                         ..setBgRenderMode(BackgroundMode.blurredTransp);
                                     }),
                                 DApplicationItem.iconWithTitle(

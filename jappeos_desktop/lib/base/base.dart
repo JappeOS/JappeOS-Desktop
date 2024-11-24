@@ -20,8 +20,7 @@ import 'package:event/event.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:jappeos_desktop/main.dart';
-import 'package:jappeos_desktop/window_manager/window_manager.dart';
+import 'package:jdwm_flutter/jdwm_flutter.dart';
 
 import 'package:shade_ui/shade_ui.dart';
 import 'package:vector_math/vector_math.dart' hide Colors;

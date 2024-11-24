@@ -32,7 +32,7 @@ class _ControlCenterMenuState extends State<ControlCenterMenu> {
   Widget build(BuildContext context) {
     return DOverlayContainer(
       width: 450,
-      height: 2 * BPPresets.medium + 3 * BPPresets.small + 2 * BPPresets.big + 6 * 46 + 5,
+      height: 2 * BPPresets.medium + 3 * BPPresets.small + 2 * BPPresets.big + 6 * (46) + 5,
       child: Navigator(
         key: _containerNavigatorKey,
         onGenerateRoute: (RouteSettings settings) {
@@ -71,22 +71,25 @@ class _QuickActionItem extends StatefulWidget {
 class _QuickActionItemState extends State<_QuickActionItem> {
   @override
   Widget build(BuildContext context) {
+    final foregroundColor = widget.isSelected ? Theme.of(context).colorScheme.onPrimary : null;
+
     return SizedBox(
       height: 46,
       child: FilledButton(
         onPressed: () => widget.onSelectionChange?.call(widget.isSelected),
         style: ButtonStyle(
-          backgroundColor: widget.isSelected ? MaterialStatePropertyAll(Theme.of(context).colorScheme.primary) : null,
-          shape: const MaterialStatePropertyAll(StadiumBorder()),
-          padding: MaterialStatePropertyAll(
+          backgroundColor: widget.isSelected ? WidgetStatePropertyAll(Theme.of(context).colorScheme.primary) : null,
+          foregroundColor: WidgetStatePropertyAll(foregroundColor),
+          shape: const WidgetStatePropertyAll(StadiumBorder()),
+          padding: WidgetStatePropertyAll(
               EdgeInsets.only(left: BPPresets.medium / 4 * 3, right: widget.onAdditionalDetailsButtonPressed != null ? 0 : BPPresets.medium / 4 * 3)),
         ),
         child: Row(children: [
           Icon(widget.icon),
           const SizedBox(width: BPPresets.small),
           Column(mainAxisAlignment: MainAxisAlignment.center, crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(widget.text, style: Theme.of(context).textTheme.bodyMedium),
-            Text(widget.isSelected.toString(), style: Theme.of(context).textTheme.bodySmall),
+            Text(widget.text, style: Theme.of(context).textTheme.bodyMedium!.copyWith(color: foregroundColor)),
+            Text(widget.isSelected.toString(), style: Theme.of(context).textTheme.bodySmall!.copyWith(color: foregroundColor)),
           ]),
           const Spacer(),
           if (widget.onAdditionalDetailsButtonPressed != null)
