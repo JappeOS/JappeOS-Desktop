@@ -16,17 +16,10 @@
 
 // ignore_for_file: library_private_types_in_public_api, constant_identifier_names
 
-//import 'package:args/args.dart';
 import 'package:flutter/material.dart';
-
 import 'base/base.dart';
 
 // TODO: Multiple windows for multiple monitors
-Future main(List<String> arguments) async {
-  //final parser = ArgParser()..addOption("monitor-id", abbr: 'm', defaultsTo: 0.toString());
-  //ArgResults argResults = parser.parse(arguments);
-//
-  //final monitorID = int.tryParse(argResults.option("monitor-id") ?? 0.toString());
-
+Future<void> main(List<String> arguments) async {
   runApp(const Desktop());
 }

@@ -30,7 +30,6 @@ class Desktop extends StatefulWidget {
 ///
 /// See [WmController] for more information on the windowing system.
 class DesktopState extends State<Desktop> {
-  // Create a new instance of [WmController].
   static WindowStackController? _wmController;
   static WindowStackController? getWmController() => _wmController;
 
@@ -50,8 +49,6 @@ class DesktopState extends State<Desktop> {
   @override
   void initState() {
     super.initState();
-
-    _wmController = WindowStackController(() => setState(() {}));
     _menuController = DesktopMenuController((x) => setState(x ?? () {}));
   }
 
@@ -59,17 +56,7 @@ class DesktopState extends State<Desktop> {
   Widget build(BuildContext context) {
     /*TODO: Remove*/ print("DESKTOP REBUILD");
 
-    // The window layer of the desktop UI.
-    Widget buildWindowLayer() => Positioned(
-      left: 0,
-      right: 0,
-      top: 0,
-      bottom: 0,
-      child: WindowStack(
-        wmController: _wmController,
-        insets: const EdgeInsets.only(top: DSKTP_UI_LAYER_TOPBAR_HEIGHT),
-      ),
-    );
+    final windowLayer = _DesktopWindowLayer(onWmController: (p) => _wmController = p);
 
     // This is the dock, it is shown in the bottom of the screen.
     Widget buildDock() {
@@ -167,7 +154,7 @@ class DesktopState extends State<Desktop> {
 
     List<Widget> buildDesktopLayersUI() {
       List<Widget> widgets = [
-        buildWindowLayer(),
+        windowLayer,
         buildDock(),
         buildTopBar(),
       ];
@@ -182,7 +169,7 @@ class DesktopState extends State<Desktop> {
 
     Widget buildBase() {
       // ignore: curly_braces_in_flow_control_structures
-      if (!renderGUI) return buildWindowLayer();
+      if (!renderGUI) return windowLayer;
       // ignore: curly_braces_in_flow_control_structures
       else return Scaffold(
         body: Container(
@@ -216,6 +203,40 @@ class DesktopState extends State<Desktop> {
       debugShowCheckedModeBanner: false,
       customThemeProperties: ShadeCustomThemeProperties(ThemeMode.dark, Color.fromARGB(255, 146, 20, 196), true),
       home: buildBase(),
+    );
+  }
+}
+
+/// The layer of the desktop where windows can be moved around.
+class _DesktopWindowLayer extends StatefulWidget {
+  const _DesktopWindowLayer({Key? key, required this.onWmController}) : super(key: key);
+
+  final void Function(WindowStackController) onWmController;
+
+  @override
+  _DesktopWindowLayerState createState() => _DesktopWindowLayerState();
+}
+
+class _DesktopWindowLayerState extends State<_DesktopWindowLayer> {
+  // Create a new instance of [WmController].
+  // TODO: remove
+  static WindowStackController? _wmController;
+
+  @override
+  void initState() {
+    super.initState();
+    assert(_wmController == null, "_wmController was not null in _DesktopWindowLayerState:initState");
+    _wmController = WindowStackController(() => setState(() {}));
+    widget.onWmController(_wmController!);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Positioned.fill(
+      child: WindowStack(
+        wmController: _wmController,
+        insets: const EdgeInsets.only(top: DSKTP_UI_LAYER_TOPBAR_HEIGHT),
+      ),
     );
   }
 }
