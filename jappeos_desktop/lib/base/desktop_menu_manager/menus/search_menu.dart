@@ -1,5 +1,5 @@
 //  JappeOS-Desktop, The desktop environment for JappeOS.
-//  Copyright (C) 2023  Jappe02
+//  Copyright (C) 2025  Jappe02
 //
 //  This program is free software: you can redistribute it and/or modify
 //  it under the terms of the GNU Affero General Public License as
@@ -18,7 +18,7 @@
 
 part of jappeos_desktop.base;
 
-class SearchMenu extends DesktopMenu {
+class SearchMenu extends CenteredDesktopMenu {
   SearchMenu({Key? key}) : super(key: key);
 
   @override
@@ -30,23 +30,32 @@ class _SearchMenuState extends State<SearchMenu> {
 
   @override
   Widget build(BuildContext context) {
-    return const DOverlayContainer(
-      width: 400,
-      child: Padding(
-        padding: EdgeInsets.all(kDefaultPadding),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              decoration: InputDecoration(
-                hintText: "Search Files, Apps & More",
-                prefixIcon: Icon(Icons.search),
+    return SizedBox(
+      width: 525,
+      height: MediaQuery.of(context).size.height / 2,
+      child: Column(
+        children: [
+          DOverlayContainer(
+            child: Padding(
+              padding: const EdgeInsets.all(kDefaultPadding),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const TextField(
+                    decoration: InputDecoration(
+                      hintText: "Search Files, Apps & More",
+                      prefixIcon: Icon(Icons.search),
+                    ),
+                    autofocus: true,
+                  ),
+                  const Divider(),
+                  Text("Results will be shown here.", style: Theme.of(context).textTheme.bodyMedium!.dim()),
+                ],
               ),
             ),
-            Divider(),
-            Text("Results will be shown here."),
-          ],
-        ),
+          ),
+          const Spacer(),
+        ],
       ),
     );
   }
