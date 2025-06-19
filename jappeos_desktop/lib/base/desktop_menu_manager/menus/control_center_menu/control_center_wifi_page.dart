@@ -1,5 +1,5 @@
 //  JappeOS-Desktop, The desktop environment for JappeOS.
-//  Copyright (C) 2024  Jappe02
+//  Copyright (C) 2025  Jappe02
 //
 //  This program is free software: you can redistribute it and/or modify
 //  it under the terms of the GNU Affero General Public License as
@@ -16,19 +16,19 @@
 
 // ignore_for_file: library_private_types_in_public_api
 
-part of jappeos_desktop.base;
+part of 'control_center_menu.dart';
 
-class ControlCenterWifiPage extends StatefulWidget {
-  const ControlCenterWifiPage({super.key});
+class _ControlCenterWifiPage extends StatefulWidget {
+  const _ControlCenterWifiPage({super.key});
 
   @override
   _ControlCenterWifiPageState createState() => _ControlCenterWifiPageState();
 }
 
-class _ControlCenterWifiPageState extends State<ControlCenterWifiPage> {
+class _ControlCenterWifiPageState extends State<_ControlCenterWifiPage> {
   @override
   Widget build(BuildContext context) {
-    return ControlCenterPageBase(
+    return _ControlCenterPageBase(
       title: "Wi-Fi",
       body: ListView.builder(
           itemCount: 5,

@@ -1,5 +1,5 @@
 //  JappeOS-Desktop, The desktop environment for JappeOS.
-//  Copyright (C) 2024  Jappe02
+//  Copyright (C) 2025  Jappe02
 //
 //  This program is free software: you can redistribute it and/or modify
 //  it under the terms of the GNU Affero General Public License as
@@ -16,7 +16,13 @@
 
 // ignore_for_file: library_private_types_in_public_api
 
-part of jappeos_desktop.base;
+library;
+
+import 'package:flutter/material.dart';
+import 'package:jappeos_desktop/base/base.dart';
+import 'package:shade_ui/shade_ui.dart';
+
+part 'control_center_wifi_page.dart';
 
 class ControlCenterMenu extends DesktopMenu {
   ControlCenterMenu({Key? key}) : super(key: key);
@@ -31,22 +37,11 @@ class _ControlCenterMenuState extends State<ControlCenterMenu> {
   @override
   Widget build(BuildContext context) {
     return DOverlayContainer(
-      width: 450,
-      height: 2 * BPPresets.medium + 3 * BPPresets.small + 2 * BPPresets.big + 6 * (46) + 5,
+      width: 400,
       child: Navigator(
         key: _containerNavigatorKey,
         onGenerateRoute: (RouteSettings settings) {
-          WidgetBuilder builder;
-          switch (settings.name) {
-            case '/':
-              builder = (BuildContext _) => const _ControlCenterMainPage();
-              break;
-            case '/wifi':
-              builder = (BuildContext _) => const ControlCenterWifiPage();
-              break;
-            default:
-              throw Exception('Invalid route: ${settings.name}');
-          }
+          builder(BuildContext _) => const _ControlCenterMainPage();
           return MaterialPageRoute(builder: builder, settings: settings);
         },
       ),
@@ -92,26 +87,28 @@ class _QuickActionItemState extends State<_QuickActionItem> {
             Text(widget.isSelected.toString(), style: Theme.of(context).textTheme.bodySmall!.copyWith(color: foregroundColor)),
           ]),
           const Spacer(),
-          if (widget.onAdditionalDetailsButtonPressed != null)
-            IconButton(
-                onPressed: widget.onAdditionalDetailsButtonPressed,
-                icon: const Icon(Icons.arrow_forward_ios),
-                padding: const EdgeInsets.symmetric(horizontal: BPPresets.medium, vertical: 10)),
+          if (widget.onAdditionalDetailsButtonPressed != null) SizedBox.square(
+            dimension: 46,
+            child: IconButton(
+              onPressed: widget.onAdditionalDetailsButtonPressed,
+              icon: const Icon(Icons.arrow_forward_ios),
+            ),
+          ),
         ]),
       ),
     );
   }
 }
 
-class ControlCenterPageBase extends StatelessWidget {
+class _ControlCenterPageBase extends StatelessWidget {
   final String title;
   final Widget body;
 
-  const ControlCenterPageBase({super.key, required this.title, required this.body});
+  const _ControlCenterPageBase({super.key, required this.title, required this.body});
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
+    return Dialog(backgroundColor: Theme.of(context).colorScheme.surface, child: Padding(
       padding: const EdgeInsets.all(BPPresets.medium),
       child: Column(
         children: [
@@ -126,12 +123,12 @@ class ControlCenterPageBase extends StatelessWidget {
           Expanded(child: body),
         ],
       ),
-    );
+    ),);
   }
 }
 
 class _ControlCenterMainPage extends StatefulWidget {
-  const _ControlCenterMainPage();
+  const _ControlCenterMainPage({super.key});
 
   @override
   _ControlCenterMainPageState createState() => _ControlCenterMainPageState();
@@ -156,12 +153,14 @@ class _ControlCenterMainPageState extends State<_ControlCenterMainPage> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            cont(Row(mainAxisSize: MainAxisSize.min, children: [
+            Row(mainAxisSize: MainAxisSize.min, children: [
               IconButton.filledTonal(
                 icon: const Row(children: [
+                  SizedBox(width: BPPresets.small),
                   Icon(Icons.battery_full),
                   SizedBox(width: BPPresets.small),
                   Text("100%"),
+                  SizedBox(width: BPPresets.small),
                 ],),
                 onPressed: () {},
               ),
@@ -169,8 +168,8 @@ class _ControlCenterMainPageState extends State<_ControlCenterMainPage> {
               IconButton.filledTonal(icon: const Icon(Icons.settings), onPressed: () {}),
               const SizedBox(width: BPPresets.small),
               IconButton.filledTonal(icon: const Icon(Icons.power_settings_new), onPressed: () {}),
-            ])),
-            const SizedBox(height: BPPresets.big),
+            ]),
+            const SizedBox(height: BPPresets.medium),
             Row(mainAxisSize: MainAxisSize.min, children: [
               Expanded(
                   child: _QuickActionItem(
@@ -178,7 +177,7 @@ class _ControlCenterMainPageState extends State<_ControlCenterMainPage> {
                       icon: Icons.wifi_rounded,
                       isSelected: true,
                       onSelectionChange: (p0) {},
-                      onAdditionalDetailsButtonPressed: () => Navigator.of(context).pushNamed("/wifi"))),
+                      onAdditionalDetailsButtonPressed: () => showDialog(context: context, builder: (_) => const _ControlCenterWifiPage(), useRootNavigator: false))),
               const SizedBox(width: BPPresets.small),
               Expanded(child: _QuickActionItem(text: "Bluetooth", icon: Icons.bluetooth_rounded, isSelected: false, onSelectionChange: (p0) {})),
             ]),
@@ -194,22 +193,21 @@ class _ControlCenterMainPageState extends State<_ControlCenterMainPage> {
               const SizedBox(width: BPPresets.small),
               Expanded(child: _QuickActionItem(text: "EN_US", icon: Icons.keyboard, isSelected: false, onSelectionChange: (p0) {})),
             ]),
-            const SizedBox(height: BPPresets.big),
-            cont(Row(mainAxisSize: MainAxisSize.max, children: [
+            const SizedBox(height: BPPresets.medium),
+            Row(mainAxisSize: MainAxisSize.max, children: [
               IconButton(icon: const Icon(Icons.volume_up), onPressed: () {}),
               Expanded(child: Slider(value: 0.5, onChanged: (p0) {})),
               IconButton(icon: const Icon(Icons.arrow_drop_down), onPressed: () {}),
-            ])),
+            ]),
             const SizedBox(height: BPPresets.small),
-            cont(Row(mainAxisSize: MainAxisSize.min, children: [
+            Row(mainAxisSize: MainAxisSize.min, children: [
               IconButton(icon: const Icon(Icons.brightness_auto), onPressed: () {}),
               Expanded(child: Slider(value: 0.5, onChanged: (p0) {})),
               IconButton(icon: const Icon(Icons.arrow_drop_down), onPressed: () {}),
-            ])),
+            ]),
           ],
         ),
       ),
     );
   }
 }
-
