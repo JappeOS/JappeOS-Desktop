@@ -1,5 +1,5 @@
 //  JappeOS-Desktop, The desktop environment for JappeOS.
-//  Copyright (C) 2024  Jappe02
+//  Copyright (C) 2025  Jappe02
 //
 //  This program is free software: you can redistribute it and/or modify
 //  it under the terms of the GNU Affero General Public License as
@@ -16,6 +16,7 @@
 
 part of jappeos_desktop.base;
 
+// TODO: Outgoing animation
 class DesktopMenuController {
   static const kMenuAnimationDuration = Duration(milliseconds: 100);
 
@@ -33,6 +34,7 @@ class DesktopMenuController {
     _currentMenuPosition = position;
     _currentMenuIsInitialBuild = true;
     rebuildCallback(null);
+    ServicesBinding.instance.keyboard.addHandler(_onKey);
     menu.onOpen.broadcast();
 
     if (closeCallback != null) {
@@ -41,32 +43,67 @@ class DesktopMenuController {
   }
 
   void closeMenu() {
-    _currentMenu!.onClose.broadcast();
-    _currentMenu!.onOpen.unsubscribeAll();
-    _currentMenu!.onClose.unsubscribeAll();
+    if (_currentMenu == null) return; // <-- no menu open, so return
+
+    ServicesBinding.instance.keyboard.removeHandler(_onKey);
+    _currentMenu?.onClose.broadcast();
+    _currentMenu?.onOpen.unsubscribeAll();
+    _currentMenu?.onClose.unsubscribeAll();
     _currentMenu = null;
     _currentMenuPosition = null;
     rebuildCallback(null);
   }
 
-  AnimatedPositioned? getWidget() {
+  WidgetTransitionEffects _getAnimation() {
+    if (_currentMenu is FullscreenDesktopMenu) {
+      return WidgetTransitionEffects(duration: kMenuAnimationDuration, opacity: 0);
+    } else if (_currentMenu is CenteredDesktopMenu) {
+      return WidgetTransitionEffects.incomingScaleUp(duration: kMenuAnimationDuration * 3, curve: Curves.easeInOutBack);
+    }
+
+    return WidgetTransitionEffects(duration: kMenuAnimationDuration, offset: const Offset(0, -75));
+  }
+
+  bool _onKey(KeyEvent event) {
+    if (event is KeyDownEvent && event.logicalKey == LogicalKeyboardKey.escape) {
+      closeMenu();
+      return true;
+    }
+
+    return false;
+  }
+
+  Widget? getWidget() {
     final double pad = _currentMenu is FullscreenDesktopMenu ? 0 : BPPresets.small;
 
     LayoutBuilder base() {
       return LayoutBuilder(
         builder: (context, constraints) {
-          bool wasInitialBuild = false;
-
           if (_currentMenuIsInitialBuild) {
-            wasInitialBuild = true;
             WidgetsBinding.instance.addPostFrameCallback((_) {
+              //_focusNode!.requestFocus();
               _currentStackWSize = MediaQuery.of(context).size;
 
               final renderBox = context.findRenderObject() as RenderBox;
               _currentMenuChildSize = renderBox.size;
 
+              final oldMenuPos = _currentMenuPosition;
+
+              _currentMenuPosition = Offset(
+                _currentMenuPosition!.dx - _currentMenuChildSize.width / 2,
+                _currentMenuPosition!.dy - _currentMenuChildSize.height / 2,
+              );
+
               // Ensure the menu is correctly positioned within the stack
               rebuildCallback(() {
+                if (_currentMenu is CenteredDesktopMenu) {
+                  _currentMenuPosition = Offset(
+                    (_currentStackWSize.width / 2) - (_currentMenuChildSize.width / 2),
+                    (_currentStackWSize.height / 2) - (_currentMenuChildSize.height / 2),
+                  );
+                  return;
+                }
+
                 var minX = pad;
                 var maxX = _currentStackWSize.width - _currentMenuChildSize.width - pad;
 
@@ -82,8 +119,8 @@ class DesktopMenuController {
                 }
 
                 _currentMenuPosition = Offset(
-                  _currentMenuPosition!.dx - _currentMenuChildSize.width / 2,
-                  _currentMenuPosition!.dy - _currentMenuChildSize.height / 2,
+                  oldMenuPos!.dx - _currentMenuChildSize.width / 2,
+                  oldMenuPos.dy - _currentMenuChildSize.height / 2,
                 );
 
                 _currentMenuPosition = Offset(
@@ -98,42 +135,35 @@ class DesktopMenuController {
 
           return TapRegion(
             onTapOutside: (_) => closeMenu(),
-            child: AnimatedOpacity(
-              opacity: wasInitialBuild ? 0.3 : 1,
-              duration: kMenuAnimationDuration,
-              child: RepaintBoundary(
-                child: AnimatedScale(
-                  curve: Curves.easeIn,
-                  duration: kMenuAnimationDuration,
-                  scale: wasInitialBuild ? 0 : 1,
-                  alignment: Alignment.topLeft,
-                  child: () {
-                    if (_currentMenu is FullscreenDesktopMenu) {
-                      return ShadeContainer.transparent(
-                        width: _currentStackWSize.width,
-                        height: (_currentStackWSize.height - DSKTP_UI_LAYER_TOPBAR_HEIGHT).clamp(0, double.infinity),
-                        backgroundBlur: true,
-                        padding: const EdgeInsets.all(BPPresets.small),
-                        child: _currentMenu as Widget,
-                      );
-                    }
+            child: WidgetAnimator(
+                  incomingEffect: _getAnimation(),
+                  child: RepaintBoundary(
+                    child: () {
+                      if (_currentMenu is FullscreenDesktopMenu) {
+                        return ShadeContainer.transparent(
+                          width: _currentStackWSize.width,
+                          height: (_currentStackWSize.height - DSKTP_UI_LAYER_TOPBAR_HEIGHT).clamp(0, double.infinity),
+                          backgroundBlur: true,
+                          padding: const EdgeInsets.all(BPPresets.small),
+                          child: _currentMenu as Widget,
+                        );
+                      }
 
-                    return _currentMenu as Widget;
-                  }(),
+                      return _currentMenu as Widget;
+                    }(),
+                  ),
                 ),
-              ),
-            ),
+
+
           );
         },
       );
     }
 
     return _currentMenu != null
-        ? AnimatedPositioned(
+        ? Positioned(
             left: _currentMenuPosition!.dx,
             top: _currentMenuPosition!.dy,
-            curve: Curves.easeIn,
-            duration: _currentMenuIsInitialBuild ? Duration.zero : kMenuAnimationDuration,
             child: base(),
           )
         : null;
@@ -149,4 +179,8 @@ abstract class DesktopMenu extends StatefulWidget {
 
 abstract class FullscreenDesktopMenu extends DesktopMenu {
   FullscreenDesktopMenu({super.key});
+}
+
+abstract class CenteredDesktopMenu extends DesktopMenu {
+  CenteredDesktopMenu({super.key});
 }
