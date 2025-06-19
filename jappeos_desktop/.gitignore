@@ -10,6 +10,7 @@
 .history
 .svn/
 .private/
+/JappeOS/tempRemoved/
 
 # IntelliJ related
 *.iml
