@@ -1,5 +1,5 @@
 //  JappeOS-Desktop, The desktop environment for JappeOS.
-//  Copyright (C) 2024  Jappe02
+//  Copyright (C) 2025  Jappe02
 //
 //  This program is free software: you can redistribute it and/or modify
 //  it under the terms of the GNU Affero General Public License as
@@ -21,22 +21,26 @@ part of jappeos_desktop.base;
 /// A basic widget that has the logo of an app and also the name below.
 class DApplicationItem extends StatefulWidget {
   final SvgPicture image;
-  final String? title;
+  final String title;
+  final bool showTitle;
+  final double sizeFactor;
   final void Function()? onPress;
 
   const DApplicationItem._({
     Key? key,
     required this.image,
-    this.title,
+    this.title = "null",
+    this.showTitle = true,
+    this.sizeFactor = 1.0,
     this.onPress,
   }) : super(key: key);
 
-  factory DApplicationItem.icon({required SvgPicture image, void Function()? onPress}) {
-    return DApplicationItem._(image: image, onPress: onPress);
+  factory DApplicationItem.icon({required SvgPicture image, required String title, double sizeFactor = 1, void Function()? onPress}) {
+    return DApplicationItem._(image: image, title: title, showTitle: false, sizeFactor: sizeFactor, onPress: onPress);
   }
 
-  factory DApplicationItem.iconWithTitle({required SvgPicture image, required String? title, void Function()? onPress}) {
-    return DApplicationItem._(image: image, title: title, onPress: onPress);
+  factory DApplicationItem.iconWithTitle({required SvgPicture image, required String title, void Function()? onPress}) {
+    return DApplicationItem._(image: image, title: title, showTitle: true, onPress: onPress);
   }
 
   @override
@@ -44,138 +48,67 @@ class DApplicationItem extends StatefulWidget {
 }
 
 class _DApplicationItemState extends State<DApplicationItem> {
-  bool isHovered = false, isPressed = false;
-  //final borderRad = BorderRadius.circular(BPPresets.small);
-  //final borderWidth = 1.0;
-//
-  //late final width = widget.title != null ? 90.0 : 80.0;
-  //late final height = widget.title != null ? 100.0 : 80.0;
+  bool _isHovered = false, _isPressed = false;
 
   @override
   Widget build(BuildContext context) {
-    //return Container(
-    //  height: 100,
-    //  width: 90,
-    //  decoration: BoxDecoration(
-    //    borderRadius: BorderRadius.circular(JappeOsDesktopUI.getDefaultBorderRadiusRedc()),
-    //    // Only show border when hovering.
-    //    border: isHovering
-    //        ? Border.all(
-    //            width: JappeOsDesktopUI.theme_defaultBorderSize(),
-    //            color: JappeOsDesktopUI.theme_customBorderColor(context),
-    //          )
-    //        : null,
-    //    //color: SHUI_THEME_PROPERTIES(ctx).backgroundColor1.withOpacity(SHUI_OPTIMAL_ELEMENT_OPACITY),
-    //  ),
-    //  child: Material(
-    //    color: Colors.transparent,
-    //    child: InkWell(
-    //      mouseCursor: SystemMouseCursors.alias,
-    //      hoverColor: Theme.of(context).colorScheme.background.withOpacity(0.1),
-    //      splashColor: Theme.of(context).colorScheme.background.withOpacity(0.25),
-    //      highlightColor: Theme.of(context).colorScheme.background.withOpacity(0.1),
-    //      borderRadius: BorderRadius.circular(JappeOsDesktopUI.getDefaultBorderRadiusRedc()),
-    //      onHover: (value) => setState(() => isHovering = value),
-    //      onTap: widget.onPress,
-    //      child: Padding(
-    //        padding: const EdgeInsets.all(5),
-    //        child: Column(
-    //          children: [
-    //            // The image/logo of app.
-    //            Expanded(child: widget.image),
-    //            // The name of the app.
-    //            Text(
-    //              widget.title,
-    //              style: TextStyle(color: Theme.of(context).textTheme.labelMedium?.color, shadows: const [Shadow(blurRadius: 3)]),
-    //            ),
-    //          ],
-    //        ),
-    //      ),
-    //    ),
-    //  ),
-    //);
-    /*
-    final accentColor = Theme.of(context).colorScheme.primary;
-    //final borderColor = Theme.of(context).colorScheme.outline;
+    final colorScheme = Theme.of(context).colorScheme;
+    final hoveredColor = colorScheme.primary.withValues(alpha: 0.08);
+    final pressedColor = colorScheme.primary.withValues(alpha: 0.08);
 
-    return Container(
-      width: width,
-      height: height,
-      decoration: const BoxDecoration(
-        //borderRadius: borderRad,
-        color: Colors.transparent,
-        //border: isHovered ? Border.all(width: borderWidth, color: borderColor) : Border.all(width: borderWidth, color: Colors.transparent),
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          mouseCursor: SystemMouseCursors.alias,
-          hoverColor: Theme.of(context).textButtonTheme.style!.overlayColor!.resolve({MaterialState.hovered}),
-          splashColor: Theme.of(context).textButtonTheme.style!.overlayColor!.resolve({MaterialState.pressed}),
-          highlightColor: accentColor.withOpacity(0.1),
-          //borderRadius: borderRad,
-          onTap: widget.onPress,
-          onHover: (value) => setState(() {
-            isHovered = value;
-          }),
-          child: Column(
-            children: [
-              Expanded(child: widget.image),
-              if (widget.title != null) ...[
-                const SizedBox(height: BPPresets.small),
-                Tooltip(message: widget.title, child: Text(widget.title!, overflow: TextOverflow.ellipsis, maxLines: 1)),
-              ]
-            ],
-          ),
-        ),
-      ),
-    );*/
+    final width = widget.showTitle ? 100 * widget.sizeFactor : 80 * widget.sizeFactor;
+    final height = widget.showTitle ? null : 80 * widget.sizeFactor;
+
+    var iconSize = width - BPPresets.small * 1.25;
+
+    if (iconSize > 60) iconSize = 60;
 
     return SizedBox(
-      width: 80,
-      child: MouseRegion(
-        onEnter: (p0) => setState(() => isHovered = true),
-        onExit: (p0) => setState(() => isHovered = false),
-        child: GestureDetector(
-          onTap: widget.onPress,
-          onTapDown: (p0) => setState(() => isPressed = true),
-          onTapUp: (p0) => setState(() => isPressed = false),
-          onTapCancel: () => setState(() => isPressed = false),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              SizedBox(
-                width: 75,
-                height: 75,
-                child: Stack(children: [
-                  Positioned.fill(
-                    child: AnimatedScale(
-                      scale: isHovered ? 1 : 0.75,
-                      curve: Curves.easeOut,
-                      duration: const Duration(milliseconds: 75),
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: isHovered ? Theme.of(context).colorScheme.onSurface.withOpacity(0.1) : null,
-                          shape: BoxShape.circle,
-                        ),
+      width: width,
+      height: height,
+      child: RepaintBoundary(
+        child: Tooltip(
+          message: widget.title,
+          child: MouseRegion(
+            onEnter: (p0) => setState(() => _isHovered = true),
+            onExit: (p0) => setState(() => _isHovered = false),
+            child: GestureDetector(
+              onTap: widget.onPress,
+              onTapDown: (p0) => setState(() => _isPressed = true),
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  color: _isPressed ? pressedColor : (_isHovered ? hoveredColor : null),
+                  borderRadius: BorderRadius.circular(BPPresets.medium),
+                ),
+                child: Padding(
+                  padding: widget.showTitle ? const EdgeInsets.symmetric(vertical: BPPresets.small) : EdgeInsets.zero,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    spacing: BPPresets.small,
+                    children: [
+                      AnimatedScale(
+                        scale: _isPressed ? 0.7 : 1,
+                        curve: Curves.easeOut,
+                        duration: const Duration(milliseconds: 75),
+                        onEnd: () {
+                          if (_isPressed) setState(() => _isPressed = false);
+                        },
+                        child: SvgPicture(widget.image.bytesLoader, width: iconSize, height: iconSize),
                       ),
-                    ),
+                      if (widget.showTitle) Text(
+                        widget.title,
+                        style: Theme.of(context).textTheme.bodyMedium,
+                        overflow: TextOverflow.ellipsis,
+                        textAlign: TextAlign.center,
+                        maxLines: 1,
+                      ),
+                    ],
                   ),
-                  Positioned.fill(
-                    child: AnimatedScale(
-                      scale: isPressed ? 0.7 : 0.8,
-                      curve: Curves.easeOut,
-                      duration: const Duration(milliseconds: 75),
-                      child: widget.image,
-                    ),
-                  ),
-                ],),
+                ),
               ),
-              if (widget.title != null) ...[
-                const SizedBox(height: BPPresets.small),
-                Tooltip(message: widget.title, child: Text(widget.title!, overflow: TextOverflow.ellipsis, maxLines: 1)),
-              ]
-            ],
+            ),
           ),
         ),
       ),
@@ -183,24 +116,25 @@ class _DApplicationItemState extends State<DApplicationItem> {
   }
 }
 
-/// A wrapper around [AdvancedContainer] that is used for the overlays and menus of the desktop.
+/// A wrapper around [ShadeContainer] that is used for the overlays and menus of the desktop.
 class DOverlayContainer extends StatelessWidget {
   final double? width, height;
   final EdgeInsetsGeometry? padding;
+  final bool increasedBorderRadius;
   final Widget child;
 
-  const DOverlayContainer({super.key, required this.child, this.width, this.height, this.padding});
+  const DOverlayContainer({super.key, required this.child, this.width, this.height, this.padding, this.increasedBorderRadius = false});
 
   @override
   Widget build(BuildContext context) {
-    return AdvancedContainer(
+    return ShadeContainer.transparent(
       width: width,
       height: height,
       padding: padding,
-      background: AdvancedContainerBackground.transparentBackground,
-      borderStyle: AdvancedContainerBorder.double,
-      borderRadius: BPPresets.medium,
-      blur: true,
+      border: ShadeContainerBorder.double,
+      borderRadius: increasedBorderRadius ? BPPresets.big : BPPresets.medium,
+      backgroundBlur: true,
+      elevation: 8,
       child: child,
     );
   }
@@ -208,6 +142,8 @@ class DOverlayContainer extends StatelessWidget {
 
 /// A topbar button that opens a desktop menu.
 class DTopbarButton extends StatefulWidget {
+  static const double _kIconSize = 17;
+
   final String? title;
   final List<Widget> children;
   final DesktopMenuController menuControllerRef;
@@ -243,7 +179,7 @@ class DTopbarButton extends StatefulWidget {
       menuControllerRef: menuControllerRef,
       menu: menu,
       alignment: alignment,
-      children: [Icon(icon)],
+      children: [Icon(icon, size: _kIconSize)],
     );
   }
 
@@ -258,7 +194,7 @@ class DTopbarButton extends StatefulWidget {
       menu: menu,
       alignment: alignment,
       children: [
-        for (var icon in icons) Icon(icon),
+        for (var icon in icons) Icon(icon, size: _kIconSize),
       ],
     );
   }
@@ -275,7 +211,7 @@ class DTopbarButton extends StatefulWidget {
       menu: menu,
       alignment: alignment,
       title: text,
-      children: [Icon(icon)],
+      children: [Icon(icon, size: _kIconSize)],
     );
   }
 
@@ -284,6 +220,8 @@ class DTopbarButton extends StatefulWidget {
 }
 
 class _DTopbarButtonState extends State<DTopbarButton> {
+  static const double _kHeight = 26;
+
   Offset globalPosition = Offset.zero;
 
   bool hovering = false;
@@ -295,13 +233,13 @@ class _DTopbarButtonState extends State<DTopbarButton> {
   @override
   Widget build(BuildContext context) {
     final accentColor = Theme.of(context).colorScheme.primary;
-    final borderColor = Theme.of(context).colorScheme.outline;
-    final splashColor = accentColor.withOpacity(0.25);
+    final borderColor = Theme.of(context).colorScheme.outlineVariant;
+    final splashColor = accentColor.withValues(alpha: 0.25);
 
     return Container(
-      margin: const EdgeInsets.only(left: 5, right: 5, top: 2),
+      margin: const EdgeInsets.only(left: 5, right: 5),
       alignment: widget.alignment,
-      height: 26,
+      height: _kHeight,
       decoration: BoxDecoration(
         borderRadius: borderRad,
         color: Colors.transparent,
@@ -325,11 +263,11 @@ class _DTopbarButtonState extends State<DTopbarButton> {
               color: isMenuOpen ? splashColor : Colors.transparent,
               borderRadius: borderRad,
               child: InkWell(
-                mouseCursor: SystemMouseCursors.alias,
-                hoverColor: Theme.of(context).colorScheme.surface.withOpacity(0.1),
+                mouseCursor: SystemMouseCursors.basic,
+                hoverColor: Theme.of(context).colorScheme.surface.withValues(alpha: 0.1),
                 splashColor: splashColor,
-                highlightColor: accentColor.withOpacity(0.1),
-                overlayColor: WidgetStatePropertyAll(splashColor.withOpacity(0.175)),
+                highlightColor: accentColor.withValues(alpha: 0.1),
+                overlayColor: WidgetStatePropertyAll(splashColor.withValues(alpha: 0.175)),
                 borderRadius: borderRad,
                 onTap: () {
                   setState(() => isMenuOpen = true);
@@ -344,16 +282,17 @@ class _DTopbarButtonState extends State<DTopbarButton> {
                 onHover: (value) => setState(() {
                   hovering = value;
                 }),
-                child: Padding(
+                child: SizedBox(height: _kHeight, child: Padding(
                   padding: const EdgeInsets.only(left: 5, right: 5),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
+                    spacing: BPPresets.small / 2,
                     children: [
                       if (widget.title != null) Text(widget.title!),
                       ...widget.children,
                     ],
                   ),
-                ),
+                ),),
               ),
             );
           },
@@ -372,13 +311,12 @@ class DMenuBackground extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AdvancedContainer(
+    return ShadeContainer.transparent(
       width: width,
       height: height,
-      borderStyle: AdvancedContainerBorder.double,
-      background: AdvancedContainerBackground.transparentBackground,
-      blur: true,
+      backgroundBlur: true,
       borderRadius: BPPresets.medium,
+      border: ShadeContainerBorder.double,
       child: child,
     );
   }
@@ -457,6 +395,122 @@ class _DWindowViewState extends State<DWindowView> {
           const SizedBox(height: 11 / 2),
         ]
       ],
+    );
+  }
+}
+
+/// The dock that shows pinned and open apps.
+class DesktopDock extends StatefulWidget {
+  final bool hasWindowIntersection;
+  final List<(SvgPicture icon, String title, void Function() onPressed)> items;
+
+  const DesktopDock({Key? key, required this.hasWindowIntersection, required this.items}) : super(key: key);
+
+  @override
+  _DesktopDockState createState() => _DesktopDockState();
+}
+
+class _DesktopDockState extends State<DesktopDock> {
+  static const _kAnimDuration = Duration(milliseconds: 150);
+  bool _showDock = true;
+
+  @override
+  Widget build(BuildContext context) {
+    return Align(
+      alignment: Alignment.bottomCenter,
+      widthFactor: 1.0,
+      child: MouseRegion(
+        onEnter: (event) {
+          if (!_showDock) setState(() => _showDock = true);
+        },
+        onExit: (event) {
+          if (_showDock && widget.hasWindowIntersection) setState(() => _showDock = false);
+        },
+        child: Padding(
+          padding: _showDock ? const EdgeInsets.only(bottom: BPPresets.small) : EdgeInsets.zero,
+          child: Row(
+            children: [
+              const Spacer(),
+              WidgetAnimator(
+                incomingEffect: WidgetTransitionEffects.incomingSlideInFromBottom(duration: _kAnimDuration),
+                outgoingEffect: WidgetTransitionEffects.outgoingSlideOutToBottom(duration: _kAnimDuration),
+                child: _showDock ? DOverlayContainer(
+                  key: const ValueKey('dockShown'),
+                  increasedBorderRadius: true,
+                  padding: const EdgeInsets.all(BPPresets.medium),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: List.generate(widget.items.length, (index) => DApplicationItem.icon(
+                                  image: widget.items[index].$1, title: widget.items[index].$2, sizeFactor: 0.75, onPress: widget.items[index].$3)),
+                  ),
+                ) : const SizedBox(key: ValueKey('dockHidden'), height: BPPresets.small),
+              ),
+              const Spacer(),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// The bar that shows system information and provides access to important parts of the OS-
+class DesktopTopBar extends StatefulWidget {
+  final DesktopMenuController menuController;
+
+  const DesktopTopBar({Key? key, required this.menuController}) : super(key: key);
+
+  @override
+  _DesktopTopBarState createState() => _DesktopTopBarState();
+}
+
+class _DesktopTopBarState extends State<DesktopTopBar> {
+  String _timeString = '';
+  Timer? _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    _updateTime();
+    _timer = Timer.periodic(const Duration(minutes: 1), (Timer t) => _updateTime());
+  }
+
+  void _updateTime() {
+    final now = DateTime.now();
+    final formattedTime = DateFormat('HH:mm').format(now);
+    setState(() {
+      _timeString = formattedTime;
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Positioned(
+      top: 0,
+      left: 0,
+      right: 0,
+      height: DSKTP_UI_LAYER_TOPBAR_HEIGHT,
+      child: ShadeContainer.transparent(
+        border: ShadeContainerBorder.none,
+        backgroundBlur: true,
+        child: Row(
+          children: [
+            DTopbarButton.icon(icon: Icons.apps, menuControllerRef: widget.menuController, menu: LauncherMenu()),
+            DTopbarButton.icon(icon: Icons.search, menuControllerRef: widget.menuController, menu: SearchMenu()),
+            DTopbarButton.icon(icon: Icons.menu_open, menuControllerRef: widget.menuController, menu: OpenWindowsMenu()),
+            const Spacer(),
+            DTopbarButton.icons(icons: const [Icons.mic, Icons.camera], menuControllerRef: widget.menuController, menu: PermissionsMenu()),
+            DTopbarButton.icons(icons: const [Icons.wifi, Icons.volume_mute, Icons.battery_full], menuControllerRef: widget.menuController, menu: ControlCenterMenu()),
+            DTopbarButton.textAndIcon(icon: Icons.notifications, text: _timeString, menuControllerRef: widget.menuController, menu: NotificationMenu()),
+          ],
+        ),
+      ),
     );
   }
 }
